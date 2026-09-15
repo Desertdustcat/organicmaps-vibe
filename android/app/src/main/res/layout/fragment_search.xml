@@ -92,7 +92,7 @@
           android:layout_height="match_parent"
           android:visibility="gone" />
 
-        <!-- Optional, additive online results from search.ch -- shown alongside, never in place
+        <!-- Optional, additive online results from search.ch: shown alongside, never in place
              of, the core ranked results above. -->
         <LinearLayout
           android:id="@+id/search_ch_frame"
