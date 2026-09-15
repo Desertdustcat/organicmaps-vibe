@@ -69,6 +69,10 @@ android {
     buildConfigField 'String', 'SUPPORT_MAIL', '"android@organicmaps.app"'
     // Should be customized in flavors.
     buildConfigField 'String', 'REVIEW_URL', '""'
+    // Free key for api.search.ch/tel (get one at https://tel.search.ch/api/getkey), supplied via
+    // -PsearchChApiKey=... or a searchChApiKey= line in ~/.gradle/gradle.properties -- never
+    // checked into the repo. SearchChDirectoryApi treats an empty key as "feature disabled".
+    buildConfigField 'String', 'SEARCH_CH_API_KEY', "\"${project.findProperty('searchChApiKey') ?: ''}\""
     resourceConfigurations += [project.ext.supportedLocalizations]
 
     base.archivesName = rootProject.name.replaceAll('\\s', '') + '-' + defaultConfig.versionCode

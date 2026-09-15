@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="200dp"
+  android:layout_height="wrap_content"
+  android:background="?attr/cardBackground"
+  android:clickable="true"
+  android:focusable="true"
+  android:foreground="?attr/selectableItemBackground"
+  android:orientation="vertical"
+  android:padding="@dimen/margin_half">
+
+  <TextView
+    android:id="@+id/search_ch_title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:maxLines="1"
+    android:textAppearance="?attr/textAppearanceSubtitle2"
+    tools:text="Muster AG" />
+
+  <TextView
+    android:id="@+id/search_ch_subtitle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/margin_quarter"
+    android:ellipsize="end"
+    android:maxLines="2"
+    android:textAppearance="?attr/textAppearanceCaption"
+    tools:text="Bahnhofstrasse 1, 8001 Zürich" />
+
+</LinearLayout>

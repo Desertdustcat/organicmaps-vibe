@@ -91,6 +91,37 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:visibility="gone" />
+
+        <!-- Optional, additive online results from search.ch -- shown alongside, never in place
+             of, the core ranked results above. -->
+        <LinearLayout
+          android:id="@+id/search_ch_frame"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="bottom"
+          android:background="?attr/cardBackground"
+          android:orientation="vertical"
+          android:paddingTop="@dimen/margin_half"
+          android:visibility="gone">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_half_plus"
+            android:layout_marginBottom="@dimen/margin_quarter"
+            android:text="@string/search_ch_panel_title"
+            android:textAppearance="?attr/textAppearanceCaption" />
+
+          <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/search_ch_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/margin_half_plus"
+            android:paddingBottom="@dimen/margin_half"
+            tools:listitem="@layout/search_ch_result_item" />
+
+        </LinearLayout>
       </FrameLayout>
 
       <!-- Country download suggest fragment -->
