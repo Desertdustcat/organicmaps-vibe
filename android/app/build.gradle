@@ -264,6 +264,9 @@ dependencies {
   implementation libs.androidx.lifecycle
   implementation libs.google.material
   implementation libs.devnullorthrow.mpandroidchart
+  // Live transit planner (app.organicmaps.routing.livetransit): sdk already depends on okhttp for
+  // native-initiated requests only (see HttpClient.java) -- this app-module usage is independent.
+  implementation libs.okhttp
 
   // Test Dependencies
   testImplementation libs.androidx.junit

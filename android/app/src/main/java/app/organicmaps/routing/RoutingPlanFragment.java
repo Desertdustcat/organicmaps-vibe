@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
@@ -22,6 +23,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import app.organicmaps.R;
 import app.organicmaps.maplayer.MapButtonsController;
+import app.organicmaps.routing.livetransit.LiveTransitBounds;
+import app.organicmaps.routing.livetransit.LiveTransitPlannerActivity;
 import app.organicmaps.sdk.Framework;
 import app.organicmaps.sdk.Router;
 import app.organicmaps.sdk.routing.RoutingController;
@@ -114,6 +117,7 @@ public class RoutingPlanFragment extends Fragment implements View.OnLayoutChange
     mBottomButtonsMaxHeight = getResources().getDimensionPixelSize(R.dimen.routing_bottom_buttons_max_height);
 
     setupRouterButtons();
+    mFrame.findViewById(R.id.live_transit).setOnClickListener(v -> onLiveTransitClick());
 
     mChartHeaderAdapter = new ChartHeaderAdapter(mChartPanel);
     mRoutingContainer = requireActivity().findViewById(R.id.routing_container);
@@ -305,6 +309,20 @@ public class RoutingPlanFragment extends Fragment implements View.OnLayoutChange
   private void setRouterClick(@IdRes int buttonId, @NonNull Router router)
   {
     mRouterTypes.findViewById(buttonId).setOnClickListener(v -> RoutingController.get().setRouterType(router));
+  }
+
+  // A separate entry point, not a Router value: live transit is an already-computed itinerary the
+  // user picks from a list (see LiveTransitPlannerFragment), not a RouterType-driven graph search,
+  // so it doesn't go through RoutingController.setRouterType()/native Router at all.
+  private void onLiveTransitClick()
+  {
+    final double[] center = Framework.nativeGetScreenRectCenter();
+    if (center.length < 2 || !LiveTransitBounds.contains(center[0], center[1]))
+    {
+      Toast.makeText(requireContext(), R.string.live_transit_outside_switzerland, Toast.LENGTH_SHORT).show();
+      return;
+    }
+    LiveTransitPlannerActivity.start(requireActivity());
   }
 
   @IdRes
