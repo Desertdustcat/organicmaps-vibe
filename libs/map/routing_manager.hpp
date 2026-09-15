@@ -7,6 +7,7 @@
 #include "map/transit/transit_reader.hpp"
 
 #include "routing/following_info.hpp"
+#include "routing/live_transit_route_builder.hpp"
 #include "routing/route.hpp"
 #include "routing/router.hpp"
 #include "routing/routing_callbacks.hpp"
@@ -230,6 +231,14 @@ public:
   bool IsMyPosition(RouteMarkType type, size_t intermediateIndex = 0);
 
   void RemoveRoute(bool deactivateFollowing);
+
+  /// \brief Renders an already-computed itinerary (see routing::BuildRouteFromLegs) that did not
+  /// come from a graph-search router — e.g. a live public-transport itinerary fetched from an
+  /// external API. One subroute per leg, styled by |legModes| (same order/count as
+  /// |route|.GetSubrouteCount()). Unlike BuildRoute(), this does not touch RoutingSession/
+  /// AsyncRouter — the route is already fully known, only drawing it is left to do. Remove with
+  /// the existing RemoveRoute(), same as any other route.
+  void SetExternalRoute(routing::Route && route, std::vector<routing::LiveTransitLegMode> const & legModes);
 
   void CheckLocationForRouting(location::GpsInfo const & info);
   void CallRouteBuilded(routing::RouterResultCode code, storage::CountriesSet const & absentCountries);

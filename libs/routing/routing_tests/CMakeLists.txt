@@ -21,6 +21,7 @@ set(SRC
   index_graph_test.cpp
   index_graph_tools.cpp
   index_graph_tools.hpp
+  live_transit_route_builder_tests.cpp
   maxspeeds_tests.cpp
   mwm_hierarchy_test.cpp
   nearest_edge_finder_tests.cpp

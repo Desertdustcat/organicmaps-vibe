@@ -95,6 +95,8 @@ set(SRC
   leaps_graph.hpp
   leaps_postprocessor.cpp
   leaps_postprocessor.hpp
+  live_transit_route_builder.cpp
+  live_transit_route_builder.hpp
   loaded_path_segment.hpp
   maxspeeds.cpp
   maxspeeds.hpp
