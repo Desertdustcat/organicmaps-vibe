@@ -53,6 +53,18 @@
   </FrameLayout>
 
   <ImageButton
+    android:id="@+id/live_transit"
+    android:layout_width="24dp"
+    android:layout_height="24dp"
+    android:layout_gravity="center_vertical"
+    android:layout_marginStart="@dimen/margin_half_plus"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:contentDescription="@string/live_transit_title"
+    android:scaleType="centerInside"
+    app:srcCompat="@drawable/ic_transit"
+    app:tint="?iconTint" />
+
+  <ImageButton
     android:id="@+id/back"
     android:layout_width="24dp"
     android:layout_height="24dp"

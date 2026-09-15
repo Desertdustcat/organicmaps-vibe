@@ -916,6 +916,65 @@ void RoutingManager::InsertSingleRoute(RouteBase const & route, bool isActive, d
   CollectRoadPointWarnings(route, roadWarnings);
 }
 
+void RoutingManager::SetExternalRoute(routing::Route && route, std::vector<LiveTransitLegMode> const & legModes)
+{
+  CHECK_EQUAL(route.GetSubrouteCount(), legModes.size(), ());
+
+  if (!m_drapeEngine)
+    return;
+
+  RemoveRoute(false /* deactivateFollowing */);
+
+  RoadWarningsCollection roadWarnings;
+  std::vector<RouteSegment> segments;
+  double distance = 0.0;
+  auto const subroutesCount = route.GetSubrouteCount();
+  for (size_t subrouteIndex = 0; subrouteIndex < subroutesCount; ++subrouteIndex)
+  {
+    route.GetSubrouteInfo(subrouteIndex, segments);
+
+    auto const startPt = route.GetSubrouteAttrs(subrouteIndex).GetStart().GetPoint();
+    // RouterType::Count is not a real router: every leg here is made of synthesized (fake) segments,
+    // so we only want CreateDrapeSubroute's generic fake-edge handling, never the Transit/Ruler
+    // special cases meant for graph-search routers.
+    auto subroute = CreateDrapeSubroute(segments, startPt, distance,
+                                        static_cast<double>(subroutesCount - subrouteIndex - 1), RouterType::Count);
+    if (!subroute)
+      continue;
+    distance = segments.back().GetDistFromBeginningMerc();
+
+    // v1: reuse the existing Pedestrian/Bicycle route styles so walk vs. vehicle legs are visually
+    // distinct without adding new stylesheet colors (see data/CLAUDE.md for that workflow). Mode-
+    // specific colors per LiveTransitLegMode (tram vs bus vs train) are a cheap follow-up.
+    if (legModes[subrouteIndex] == LiveTransitLegMode::Walk)
+    {
+      subroute->m_routeType = df::RouteType::Pedestrian;
+      subroute->AddStyle(df::SubrouteStyle(df::kRoutePedestrian, df::RoutePattern(4.0, 2.0)));
+    }
+    else
+    {
+      subroute->m_routeType = df::RouteType::Bicycle;
+      subroute->AddStyle(df::SubrouteStyle(df::kRouteBicycle, df::RoutePattern(8.0, 2.0)));
+    }
+
+    CollectRoadWarnings(segments, startPt, subroute->m_baseDistance, roadWarnings);
+
+    auto const subrouteId =
+        m_drapeEngine.SafeCallWithResult(&df::DrapeEngine::AddSubroute, df::SubrouteConstPtr(subroute.release()));
+
+    std::lock_guard<std::mutex> lock(m_drapeSubroutesMutex);
+    m_drapeSubroutes.push_back(subrouteId);
+  }
+
+  if (!roadWarnings.empty())
+    CreateRoadWarningMarks(std::move(roadWarnings));
+
+  m2::RectD routeRect = route.GetLimitRect();
+  routeRect.Scale(kRouteScaleMultiplier);
+  m_drapeEngine.SafeCall(&df::DrapeEngine::SetModelViewRect, routeRect, true /* applyRotation */, -1 /* zoom */,
+                         true /* isAnim */, true /* useVisibleViewport */);
+}
+
 void RoutingManager::FollowRoute()
 {
   if (!m_routingSession.EnableFollowMode())

@@ -528,6 +528,9 @@
       android:name="app.organicmaps.settings.DrivingOptionsActivity"
       android:label="@string/driving_options_title"/>
     <activity
+      android:name="app.organicmaps.routing.livetransit.LiveTransitPlannerActivity"
+      android:label="@string/live_transit_title"/>
+    <activity
         android:name="app.organicmaps.MapPlaceholderActivity"/>
     <activity
         android:name="app.organicmaps.car.screens.permissions.RequestPermissionsActivity"/>

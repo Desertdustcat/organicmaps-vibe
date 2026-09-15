@@ -38,6 +38,9 @@ import app.organicmaps.sdk.search.SearchResult;
 import app.organicmaps.sdk.util.Config;
 import app.organicmaps.sdk.util.Language;
 import app.organicmaps.sdk.util.SharedPropertiesUtils;
+import app.organicmaps.search.searchch.SearchChDirectoryApi;
+import app.organicmaps.search.searchch.SearchChResult;
+import app.organicmaps.search.searchch.SearchChResultAdapter;
 import app.organicmaps.util.UiUtils;
 import app.organicmaps.widget.PlaceholderView;
 import app.organicmaps.widget.SearchShimmerView;
@@ -65,12 +68,20 @@ public class SearchFragment extends Fragment implements SearchListener, Categori
   private SearchShimmerView mShimmerView;
   private SearchPageViewModel mSearchViewModel;
 
+  // Optional, additive online results from search.ch -- entirely independent of SearchEngine/
+  // SearchListener and mSearchAdapter above; never merged into the core ranked results.
+  private final SearchChDirectoryApi mSearchChApi = new SearchChDirectoryApi();
+  private View mSearchChFrame;
+  private SearchChResultAdapter mSearchChAdapter;
+
   // Debouncer for runSearch() — collapses bursts of keystrokes into a single engine invocation.
   // searchInteractive() fans out to both SearchInViewport + EverywhereSearch internally, so the
   // saving doubles for the per-prefix cost. ~200 ms matches the Material Design autocomplete guidance.
   private static final long SEARCH_DEBOUNCE_MS = 200;
   private final Handler mSearchDebounceHandler = new Handler(Looper.getMainLooper());
   private final Runnable mDebouncedRunSearch = this::runSearch;
+
+  private static final int SEARCH_CH_RESULT_ZOOM = 16;
 
   // Last (hasQuery, activeTab) snapshot applied by syncNestedScrollingState(); both null until the
   // first call. Used to skip the repeat work / requestLayout() when neither input changed.
@@ -289,6 +300,13 @@ public class SearchFragment extends Fragment implements SearchListener, Categori
     mResultsPlaceholder = mResultsFrame.findViewById(R.id.placeholder);
     mResultsPlaceholder.setContent(R.string.search_not_found, R.string.search_not_found_query);
     mShimmerView = mResultsFrame.findViewById(R.id.search_shimmer);
+
+    mSearchChFrame = mResultsFrame.findViewById(R.id.search_ch_frame);
+    mSearchChAdapter = new SearchChResultAdapter(this::onSearchChResultClick);
+    final RecyclerView searchChResults = mResultsFrame.findViewById(R.id.search_ch_results);
+    searchChResults.setLayoutManager(new LinearLayoutManager(view.getContext(), LinearLayoutManager.HORIZONTAL, false));
+    searchChResults.setAdapter(mSearchChAdapter);
+
     mSearchAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
       @Override
       public void onChanged()
@@ -530,6 +548,7 @@ public class SearchFragment extends Fragment implements SearchListener, Categori
   {
     mSearchDebounceHandler.removeCallbacks(mDebouncedRunSearch);
     SearchEngine.INSTANCE.cancel();
+    UiUtils.hide(mSearchChFrame);
     updateSearchView();
   }
 
@@ -588,6 +607,44 @@ public class SearchFragment extends Fragment implements SearchListener, Categori
     }
 
     updateFrames();
+    runSearchChQuery(getQuery());
+  }
+
+  // Independent of SearchEngine.searchInteractive() above -- its own network call, its own
+  // result list, shown only in the separate search_ch_frame panel.
+  private void runSearchChQuery(@NonNull String query)
+  {
+    if (!mSearchChApi.isConfigured() || query.trim().isEmpty())
+    {
+      UiUtils.hide(mSearchChFrame);
+      return;
+    }
+
+    mSearchChApi.search(query, new SearchChDirectoryApi.ResultCallback() {
+      @Override
+      public void onSuccess(@NonNull List<SearchChResult> results)
+      {
+        if (!isAdded() || !getQuery().equals(query))
+          return; // A newer query has since started; this response is stale.
+        mSearchChAdapter.setItems(results);
+        UiUtils.showIf(!results.isEmpty(), mSearchChFrame);
+      }
+
+      @Override
+      public void onFailure(@NonNull String message)
+      {
+        // Optional feature: fail quietly rather than showing an error for a non-essential panel.
+        if (isAdded())
+          UiUtils.hide(mSearchChFrame);
+      }
+    });
+  }
+
+  private void onSearchChResultClick(@NonNull SearchChResult result)
+  {
+    if (!result.mHasCoordinates)
+      return;
+    Framework.nativeSetViewportCenter(result.mLat, result.mLon, SEARCH_CH_RESULT_ZOOM);
   }
 
   @Override
